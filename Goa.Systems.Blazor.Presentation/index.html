@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+	<title>reveal.js</title>
+
+	<link rel="stylesheet" href="dist/reset.css">
+	<link rel="stylesheet" href="dist/reveal.css">
+	<link rel="stylesheet" href="dist/theme/black.css">
+
+	<!-- Theme used for syntax highlighted code -->
+	<link rel="stylesheet" href="plugin/highlight/monokai.css">
+</head>
+
+<body>
+	<div class="reveal">
+		<div class="slides">
+			<section>
+				<h1>From code to production</h1>
+				<h2>A workflow example</h2>
+				<h3>Andreas Gottardi</h3>
+				<p><a href="https://github.com/goa-systems/Goa.Systems.Blazor"
+						target="_blank">https://github.com/goa-systems/Goa.Systems.Blazor</a></p>
+			</section>
+			<section>
+				<h2>What are we going to talk about today?</h2>
+				<img src="media/1Yzm0YRfIc.png" style="width: max-content;" />
+			</section>
+			<section>
+				<h2>And what does that mean? (The facts)</h2>
+				<ul>
+					<li>A GitHub based .NET 8 Blazor project</li>
+					<li>A self hosted runner supporting Docker</li>
+					<li>Migratable architecture with standard tools</li>
+					<li>Unit- (code) and integration tests (endpoints)</li>
+					<li>SonarQube code analysis</li>
+					<li>Multiple outputs (NuGet, Docker image)</li>
+					<li>Automatically generated and living documentation</li>
+				</ul>
+			</section>
+			<section>
+				<h2>And what else?</h2>
+				<p>It's all free</p>
+			</section>
+			<section>
+				<h2>Static services (Setup once)</h2>
+				<ul>
+					<li>Nginx webserver (8080)</li>
+					<li>Container registry (5000)</li>
+					<li>SonarQube server (9000)</li>
+				</ul>
+				<br><br>
+				<h2>Dynamic containers</h2>
+				<ul>
+					<li>Application test (9001)</li>
+					<li>Application prod (9002)</li>
+					<li>Integration test container</li>
+				</ul>
+			</section>
+		</div>
+	</div>
+
+	<script src="dist/reveal.js"></script>
+	<script src="plugin/notes/notes.js"></script>
+	<script src="plugin/markdown/markdown.js"></script>
+	<script src="plugin/highlight/highlight.js"></script>
+	<script>
+		// More info about initialization & config:
+		// - https://revealjs.com/initialization/
+		// - https://revealjs.com/config/
+		Reveal.initialize({
+			hash: true,
+
+			// Learn about plugins: https://revealjs.com/plugins/
+			plugins: [RevealMarkdown, RevealHighlight, RevealNotes]
+		});
+	</script>
+</body>
+
+</html>

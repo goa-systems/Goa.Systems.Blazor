@@ -1,0 +1,18 @@
+title: Build agent documentation
+date: \today
+subtitle:
+  A complete guide
+author:
+  - Andreas Gottardi, GOA Systems
+keywords: [buildagent, document]
+papersize: a4
+links-as-notes: true
+toc: true
+toc-depth: 2
+toc-own-page: true
+lang: en
+titlepage: true
+footer-left: Demo
+logo: logo.pdf
+logo-width: 200pt
+numbersections: true

@@ -1,0 +1,156 @@
+on:
+  push:
+    branches:
+    - main
+  workflow_dispatch:
+
+env:
+  VERSION: 0.0.1
+  TARGETUSER: svcblazor
+  TARGETHOST: localhost
+  TESTPORT: 9001
+  PRODPORT: 9002
+
+jobs:
+  build:
+    name: Build with Docker
+    runs-on: my-build-agent
+    steps:
+      - run: |
+          docker run --rm -v "$PWD":/project bash:latest chown --recursive $(id -u):$(id -g) /project 
+        name: Reset permissions
+      - uses: actions/checkout@v3
+      - run: |
+          docker run --rm -v "$PWD":/source -w /source mcr.microsoft.com/dotnet/sdk:8.0 dotnet build
+        name: Build application
+      - run: |
+          docker run --rm -v "$PWD":/source -w /source mcr.microsoft.com/dotnet/sdk:8.0 dotnet test Goa.Systems.Blazor.Tests/Goa.Systems.Blazor.Tests.csproj
+        name: Test application
+      - run: |
+          docker run --rm -v "$PWD":/source -w /source mcr.microsoft.com/dotnet/sdk:8.0 dotnet publish Goa.Systems.Blazor.App/Goa.Systems.Blazor.App.csproj -o Published
+        name: Publish application
+      - run: |
+          docker run --rm -v "$PWD":/source -w /source mcr.microsoft.com/dotnet/sdk:8.0 dotnet pack Goa.Systems.Blazor.App/Goa.Systems.Blazor.App.csproj -p:PackageVersion=$VERSION --output Packages
+        name: Create NuGet package
+      - run: |
+          docker build -t goa-systems-blazor:$VERSION-test .
+        name: Build docker container
+      - run: |
+          docker run --rm -v "$PWD":/project bash:latest chown --recursive $(id -u):$(id -g) /project 
+        name: Change permissions
+  integrationtest:
+    name: Integrationtest
+    needs: build
+    runs-on: my-build-agent
+    steps:
+      - run: |
+          docker container stop inttestcont || true
+          docker run --name inttestcont --rm -d -e ASPNETCORE_URLS=http://+:$TESTPORT -p $TESTPORT:$TESTPORT goa-systems-blazor:$VERSION-test
+          echo "Waiting 5 seconds for the container to fully load."
+          sleep 5
+        name: Run test container
+      - run: |
+          docker build -t goa-systems-blazor-integrationtest:$VERSION -f Goa.Systems.Blazor.Integrationtest/Integrationtest.Dockerfile .
+        name: Build integrationtest
+      - run: |
+          docker container stop goa-systems-blazor-integrationtest || true
+          docker container rm goa-systems-blazor-integrationtest || true
+          docker run --name goa-systems-blazor-integrationtest --net=host goa-systems-blazor-integrationtest:$VERSION
+        name: Run integrationtest
+      - run: |
+          echo "Stopping and removing integration test"
+          docker container stop goa-systems-blazor-integrationtest || true
+          docker container rm goa-systems-blazor-integrationtest || true
+          docker image rm goa-systems-blazor-integrationtest:$VERSION || true
+
+          echo "Stopping and removing test container"
+          docker container stop inttestcont || true
+          docker container rm inttestcont || true
+        name: Stop and cleanup container
+      - run: |
+          echo "Retagging image as tests were successful"
+          docker tag goa-systems-blazor:$VERSION-test goa-systems-blazor:$VERSION
+          docker image rm goa-systems-blazor:$VERSION-test
+        name: Retag image
+      - run: |
+          docker run --rm -v "$PWD":/project bash:latest chown --recursive $(id -u):$(id -g) /project 
+        name: Change permissions
+  codeanalysis:
+    name: Code analysis
+    needs: integrationtest
+    runs-on: my-build-agent
+    steps:
+      - run: |
+          docker run \
+          --name goa-systems-blazor-codeanalysis \
+          --rm \
+          -e SONAR_HOST_URL="http://localhost:9000" \
+          -e SONAR_SCANNER_OPTS="-Dsonar.projectKey=goa-systems-blazor" \
+          -e SONAR_LOGIN="sqp_f9adf7741bac3d42c6fe75876f3713abfccdc9a5" \
+          -v "$PWD:/usr/src" \
+          --net=host \
+          sonarsource/sonar-scanner-cli
+          docker container stop goa-systems-blazor-codeanalysis || true
+          docker container rm goa-systems-blazor-codeanalysis || true
+        name: Run code analysis
+  documentation:
+    name: Documentation
+    needs: codeanalysis
+    runs-on: my-build-agent
+    steps:
+      - run: |
+          docker run --rm \
+            --name goa-systems-blazor-badoc \
+            -v $PWD/Goa.Systems.Blazor.Docs:/data \
+            -w /data \
+            rstropek/pandoc-latex \
+            -f markdown \
+            --template https://raw.githubusercontent.com/Wandmalfarbe/pandoc-latex-template/v2.4.0/eisvogel.tex \
+            -t latex \
+            --metadata titlepage-background=background.pdf \
+            -o BuildAgent.pdf \
+            --metadata-file=buildagent.yaml \
+            BUILDAGENT.md
+          docker run --rm -v "$PWD":/project bash:latest chown --recursive $(id -u):$(id -g) /project
+        name: Create build agent doc
+      - run: |
+          docker run --rm \
+            --name goa-systems-blazor-sqdoc \
+            -v $PWD/Goa.Systems.Blazor.Docs:/data \
+            -w /data \
+            rstropek/pandoc-latex \
+            -f markdown \
+            --template https://raw.githubusercontent.com/Wandmalfarbe/pandoc-latex-template/v2.4.0/eisvogel.tex \
+            -t latex \
+            --metadata titlepage-background=background.pdf \
+            -o SonarQube.pdf \
+            --metadata-file=sonarqube.yaml \
+            SONARQUBE.md
+          docker run --rm -v "$PWD":/project bash:latest chown --recursive $(id -u):$(id -g) /project
+        name: Create sonarqube doc
+  publishcontents:
+    name: Publish contents
+    needs: documentation
+    runs-on: my-build-agent
+    steps:
+      - run: |
+          docker image tag goa-systems-blazor:$VERSION localhost:5000/goa-systems-blazor:$VERSION
+          docker image push localhost:5000/goa-systems-blazor:$VERSION
+          docker image rm goa-systems-blazor:$VERSION
+        name: Tag and publish to registry
+      - run: |
+          cp Goa.Systems.Blazor.Docs/BuildAgent.pdf ~/wwwroot/BuildAgent-$VERSION.pdf
+          cp Goa.Systems.Blazor.Docs/SonarQube.pdf ~/wwwroot/SonarQube-$VERSION.pdf
+          cp Packages/Goa.Systems.Blazor.App.$VERSION.nupkg ~/wwwroot/Goa.Systems.Blazor.App.$VERSION.nupkg
+        name: Publich artifacts and documentation
+  deployapp:
+    name: Deploy application
+    needs: publishcontents
+    runs-on: my-build-agent
+    steps:
+      - run: |
+          ssh-keyscan $TARGETHOST 1> known_hosts 2> stderr.log
+          ssh -o UserKnownHostsFile=known_hosts $TARGETUSER@$TARGETHOST "docker container stop gsbprod || true"
+          ssh -o UserKnownHostsFile=known_hosts $TARGETUSER@$TARGETHOST "docker run --name gsbprod --rm -d -e ASPNETCORE_URLS=http://+:$PRODPORT -p $PRODPORT:$PRODPORT localhost:5000/goa-systems-blazor:$VERSION"
+          rm known_hosts
+        name: Deploy application
