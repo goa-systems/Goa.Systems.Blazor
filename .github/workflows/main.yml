@@ -81,12 +81,13 @@ jobs:
     runs-on: my-build-agent
     steps:
       - run: |
+          TOKEN=$(cat ~/.sqtoken)
           docker run \
           --name goa-systems-blazor-codeanalysis \
           --rm \
           -e SONAR_HOST_URL="http://localhost:9000" \
           -e SONAR_SCANNER_OPTS="-Dsonar.projectKey=goa-systems-blazor" \
-          -e SONAR_LOGIN="sqp_f9adf7741bac3d42c6fe75876f3713abfccdc9a5" \
+          -e SONAR_LOGIN="$TOKEN" \
           -v "$PWD:/usr/src" \
           --net=host \
           sonarsource/sonar-scanner-cli
