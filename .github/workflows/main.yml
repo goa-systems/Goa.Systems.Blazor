@@ -129,6 +129,21 @@ jobs:
             SONARQUBE.md
           docker run --rm -v "$PWD":/project bash:latest chown --recursive $(id -u):$(id -g) /project
         name: Create sonarqube doc
+      - run: |
+          docker run --rm \
+            --name goa-systems-blazor-sqdoc \
+            -v $PWD/Goa.Systems.Blazor.Docs:/data \
+            -w /data \
+            rstropek/pandoc-latex \
+            -f markdown \
+            --template https://raw.githubusercontent.com/Wandmalfarbe/pandoc-latex-template/v2.4.0/eisvogel.tex \
+            -t latex \
+            --metadata titlepage-background=background.pdf \
+            -o Services.pdf \
+            --metadata-file=services.yaml \
+            SERVICES.md
+          docker run --rm -v "$PWD":/project bash:latest chown --recursive $(id -u):$(id -g) /project
+        name: Create services doc
   publishcontents:
     name: Publish contents
     needs: documentation
@@ -142,6 +157,7 @@ jobs:
       - run: |
           cp Goa.Systems.Blazor.Docs/BuildAgent.pdf ~/wwwroot/BuildAgent-$VERSION.pdf
           cp Goa.Systems.Blazor.Docs/SonarQube.pdf ~/wwwroot/SonarQube-$VERSION.pdf
+          cp Goa.Systems.Blazor.Docs/Services.pdf ~/wwwroot/Services-$VERSION.pdf
           cp Packages/Goa.Systems.Blazor.App.$VERSION.nupkg ~/wwwroot/Goa.Systems.Blazor.App.$VERSION.nupkg
         name: Publich artifacts and documentation
   deployapp:
