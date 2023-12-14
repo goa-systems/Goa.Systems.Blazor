@@ -169,6 +169,6 @@ jobs:
           ssh-keyscan $TARGETHOST 1> known_hosts 2> stderr.log
           ssh -o UserKnownHostsFile=known_hosts $TARGETUSER@$TARGETHOST "docker container stop gsbprod || true"
           ssh -o UserKnownHostsFile=known_hosts $TARGETUSER@$TARGETHOST "docker container rm gsbprod || true"
-          ssh -o UserKnownHostsFile=known_hosts $TARGETUSER@$TARGETHOST "docker run --name gsbprod --rm -d -e ASPNETCORE_URLS=http://+:$PRODPORT -p $PRODPORT:$PRODPORT localhost:5000/goa-systems-blazor:$VERSION"
+          ssh -o UserKnownHostsFile=known_hosts $TARGETUSER@$TARGETHOST "docker run --name gsbprod --restart always -d -e ASPNETCORE_URLS=http://+:$PRODPORT -p $PRODPORT:$PRODPORT localhost:5000/goa-systems-blazor:$VERSION"
           rm known_hosts
         name: Deploy application
