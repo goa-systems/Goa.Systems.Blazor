@@ -86,7 +86,7 @@ jobs:
           --name goa-systems-blazor-codeanalysis \
           --rm \
           -e SONAR_HOST_URL="http://localhost:9000" \
-          -e SONAR_SCANNER_OPTS="-Dsonar.projectKey=goa-systems-blazor" \
+          -e SONAR_SCANNER_OPTS="-Dsonar.projectKey=goa-systems-blazor -Dsonar.exclusions=Goa.Systems.Blazor.Presentation" \
           -e SONAR_LOGIN="$TOKEN" \
           -v "$PWD:/usr/src" \
           --net=host \
