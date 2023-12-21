@@ -73,7 +73,7 @@ jobs:
           docker image rm goa-systems-blazor:$VERSION-test
         name: Retag image
       - run: |
-          docker run --rm -v "$PWD":/project bash:latest tar -c -z --exclude "Goa.Systems.Blazor.App.deps.json" --exclude "appsettings.Development.json"  -f Packages/Goa.Systems.Blazor.$VERSION.tar.gz -C Published/ .
+          docker run --rm -v "$PWD":/project -w "/project" bash:latest tar -c -z --exclude "Goa.Systems.Blazor.App.deps.json" --exclude "appsettings.Development.json"  -f Packages/Goa.Systems.Blazor.$VERSION.tar.gz -C Published/ .
         name: Create tar archive
       - run: |
           docker run --rm -v "$PWD":/project bash:latest chown --recursive $(id -u):$(id -g) /project 
