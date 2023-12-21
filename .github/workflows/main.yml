@@ -74,12 +74,13 @@ jobs:
         name: Retag image
       - run: |
           for F in `ls Published`
+          do
             if [[ "$F" =~ .*Development.* ]]
             then
               echo "Excluding $F"
             else
               echo "Storing $F"
-              do tar --append --file=Packages/Goa.Systems.Blazor.$VERSION.tar -C Published 
+              tar --append --file=Packages/Goa.Systems.Blazor.$VERSION.tar -C Published 
             fi
           done
           gzip -9 Packages/Goa.Systems.Blazor.$VERSION.tar
