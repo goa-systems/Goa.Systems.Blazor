@@ -80,7 +80,7 @@ jobs:
               echo "Excluding $F"
             else
               echo "Storing $F"
-              tar --append --file=Packages/Goa.Systems.Blazor.$VERSION.tar -C Published 
+              tar --append --file=Packages/Goa.Systems.Blazor.$VERSION.tar -C Published "$F"
             fi
           done
           gzip -9 Packages/Goa.Systems.Blazor.$VERSION.tar
