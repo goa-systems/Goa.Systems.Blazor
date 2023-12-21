@@ -24,5 +24,5 @@ app.UseAntiforgery();
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
-app.MapGet("/Testendpoint", () => Content.PageContent() + " 1");
+app.MapGet("/Testendpoint", () => Content.PageContent());
 app.Run();
