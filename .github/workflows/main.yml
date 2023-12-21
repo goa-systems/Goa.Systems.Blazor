@@ -73,7 +73,15 @@ jobs:
           docker image rm goa-systems-blazor:$VERSION-test
         name: Retag image
       - run: |
-          for F in `ls Published`; do tar --append --file=Packages/Goa.Systems.Blazor.$VERSION.tar -C Published $F; done
+          for F in `ls Published`
+            if [[ "$F" =~ .*Development.* ]]
+            then
+              echo "Excluding $F"
+            else
+              echo "Storing $F"
+              do tar --append --file=Packages/Goa.Systems.Blazor.$VERSION.tar -C Published 
+            fi
+          done
           gzip -9 Packages/Goa.Systems.Blazor.$VERSION.tar
         name: Create tar archive
       - run: |
