@@ -75,7 +75,7 @@ jobs:
       - run: |
           for F in `ls Published`
           do
-            if [[ "$F" =~ .*Development.* ]]
+            if [[ "$F" =~ appsettings\..* ]]
             then
               echo "Excluding $F"
             else

@@ -1,6 +1,8 @@
 using Goa.Systems.Blazor.App.Components;
 using Goa.Systems.Blazor.Logic;
 
+IConfigurationRoot config = new ConfigurationBuilder().AddJsonFile("appsettings.json").AddEnvironmentVariables().Build();
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -25,4 +27,5 @@ app.UseAntiforgery();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 app.MapGet("/Testendpoint", () => Content.PageContent());
+app.MapGet("/Configendpoint", () => config.GetValue<string>("KeyThree:Message"));
 app.Run();
